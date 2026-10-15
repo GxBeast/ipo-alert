@@ -535,16 +535,16 @@ def evaluate_verdict(gmp_pct: float, qib_x: float, gmp_min: float = 15.0, qib_mi
         if gmp_pass and not qib_pass:
             return "WATCH", "👀", f"GMP {gmp_pct:.1f}% ≥ {gmp_min:.0f}% | QIB currently {qib_x:.1f}x (watch for ≥ {qib_min:.0f}x by 3 PM)"
         elif not gmp_pass and qib_pass:
-            return "SKIP", "❌", f"Low GMP ({gmp_pct:.1f}% < {gmp_min:.0f}% threshold)"
+            return "SKIP", "❌", f"Low GMP ({gmp_pct:.1f}% &lt; {gmp_min:.0f}% threshold)"
         else:
-            return "SKIP", "❌", f"Low GMP ({gmp_pct:.1f}% < {gmp_min:.0f}%) and Low QIB ({qib_x:.1f}x < {qib_min:.0f}x)"
+            return "SKIP", "❌", f"Low GMP ({gmp_pct:.1f}% &lt; {gmp_min:.0f}%) and Low QIB ({qib_x:.1f}x &lt; {qib_min:.0f}x)"
     else:  # final mode (3:00 PM cutoff)
         if gmp_pass and not qib_pass:
-            return "SKIP", "❌", f"Low QIB subscription ({qib_x:.2f}x < {qib_min:.0f}x threshold)"
+            return "SKIP", "❌", f"Low QIB subscription ({qib_x:.2f}x &lt; {qib_min:.0f}x threshold)"
         elif not gmp_pass and qib_pass:
-            return "SKIP", "❌", f"Low GMP ({gmp_pct:.1f}% < {gmp_min:.0f}% threshold)"
+            return "SKIP", "❌", f"Low GMP ({gmp_pct:.1f}% &lt; {gmp_min:.0f}% threshold)"
         else:
-            return "SKIP", "❌", f"Low GMP ({gmp_pct:.1f}% < {gmp_min:.0f}%) and Low QIB ({qib_x:.2f}x < {qib_min:.0f}x)"
+            return "SKIP", "❌", f"Low GMP ({gmp_pct:.1f}% &lt; {gmp_min:.0f}%) and Low QIB ({qib_x:.2f}x &lt; {qib_min:.0f}x)"
 
 
 def build_morning_message(all_ipos: List[Dict], gmp_min: float = 15.0) -> str:
