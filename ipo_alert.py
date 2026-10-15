@@ -49,11 +49,9 @@ def col(heads, k, avoid=""):
 
 
 def scrape(page, url):
-      page.goto(url, wait_until="domcontentloaded", timeout=60000)
-    page.wait_for_function(
-        "() => [...document.querySelectorAll('table tbody tr')].some(r => r.cells.length > 4)",
-        timeout=60000)
-    data = page.evaluate("""() => {
+        page.goto(url, wait_until="domcontentloaded", timeout=60000)
+        page.wait_for_function("() => [...document.querySelectorAll('table tbody tr')].some(r => r.cells.length > 4)", timeout=60000)
+        data = page.evaluate("""() => {
         const t = [...document.querySelectorAll('table')]
             .sort((a, b) => b.rows.length - a.rows.length)[0];
         return {
