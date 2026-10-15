@@ -1,0 +1,65 @@
+name: IPO Alert Bot
+
+on:
+  schedule:
+    # 9:00 AM IST Mon-Fri (03:30 UTC) -> Morning Radar
+    - cron: '30 3 * * 1-5'
+    # 3:00 PM IST Mon-Fri (09:30 UTC) -> Final Verdict
+    - cron: '30 9 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Alert Mode (auto / morning / final)'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - morning
+          - final
+
+jobs:
+  alert:
+    name: Run IPO Alert
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install playwright requests
+          playwright install --with-deps chromium
+
+      - name: Run IPO Alert Bot
+        env:
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          GMP_MIN_PCT: ${{ vars.GMP_MIN_PCT || 15 }}
+          QIB_MIN_X: ${{ vars.QIB_MIN_X || 10 }}
+          MODE: ${{ github.event.inputs.mode || 'auto' }}
+        run: |
+          python ipo_alert.py
+
+      # Safety net: If Python fails before running or the step crashes, send a Telegram error
+      - name: Notify Telegram on Workflow Failure
+        if: failure()
+        env:
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: |
+          if [ -n "$TG_TOKEN" ] && [ -n "$TG_CHAT_ID" ]; then
+            curl -s -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+              -d "chat_id=${TG_CHAT_ID}" \
+              -d "parse_mode=HTML" \
+              -d "text=🚨 <b>IPO Alert Workflow Failed</b>%0AWorkflow run failed on GitHub Actions.%0A<a href=\"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\">View Run Logs</a>"
+          fi
