@@ -67,6 +67,22 @@ def normalize_name(name: str) -> str:
     return n.strip()
 
 
+def format_indian_number(num: float | int) -> str:
+    """Formats numbers into Indian numbering format (e.g. 10,13,540)."""
+    s = str(int(round(num)))
+    if len(s) <= 3:
+        return s
+    last_three = s[-3:]
+    rem = s[:-3]
+    parts = []
+    while len(rem) > 2:
+        parts.append(rem[-2:])
+        rem = rem[:-2]
+    if rem:
+        parts.append(rem)
+    return ",".join(reversed(parts)) + "," + last_three
+
+
 def parse_price(price_text: str) -> float:
     """Extracts numeric price from text like '700', '1,119', '650 - 700'."""
     if not price_text or price_text.strip() in ['-', '--', 'N/A']:
@@ -561,7 +577,7 @@ def build_gmp_alert_message(qualifying_ipos: List[Dict], gmp_min: float = 20.0) 
         lines.append(f"• <b>HNI Sub:</b> {ipo['hni_x']:.2f}x")
         lines.append(f"• <b>Retail Sub:</b> {ipo['retail_x']:.2f}x")
         if ipo["bhni_lots"] > 0:
-            lines.append(f"• <b>bHNI App:</b> {ipo['bhni_lots']} lots ({ipo['bhni_shares']:,} shares) | ₹{ipo['bhni_value']:,.0f}")
+            lines.append(f"• <b>bHNI App:</b> {format_indian_number(ipo['bhni_lots'])} lots ({format_indian_number(ipo['bhni_shares'])} shares) | ₹{format_indian_number(ipo['bhni_value'])}")
         lines.append("──────────────────────")
 
     return "\n".join(lines)
