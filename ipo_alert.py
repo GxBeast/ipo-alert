@@ -516,21 +516,19 @@ def build_gmp_alert_message(qualifying_ipos: List[Dict], gmp_min: float = 20.0) 
     """
     now_ist = get_ist_now().strftime("%d-%b-%Y, %I:%M %p IST")
     lines = [
-        f"🎯 <b>IPO ALERT (GMP ≥ {gmp_min:.0f}%)</b>",
-        f"<i>Time: {now_ist}</i>",
+        f"🚨 <b>IPO LAST DAY ALERT (GMP ≥ {gmp_min:.0f}%)</b>",
+        f"<i>Closing Today: {now_ist}</i>",
         "━━━━━━━━━━━━━━━━━━━━━━"
     ]
 
     for ipo in qualifying_ipos:
         cat_label = "mainboard" if ipo["category"] == "Mainboard" else "sme"
-        days_str = "CLOSING TODAY" if ipo["is_closing_today"] else f"{ipo['days_left']}d left"
 
         lines.append(f"<b>{ipo['name']} ({cat_label})</b>")
         lines.append(f"• <b>GMP:</b> ₹{ipo['gmp_rs']:.0f} (<b>{ipo['gmp_pct']:+.1f}%</b>)")
         lines.append(f"• <b>QIB Sub:</b> {ipo['qib_x']:.2f}x")
         lines.append(f"• <b>HNI Sub:</b> {ipo['hni_x']:.2f}x")
         lines.append(f"• <b>Retail Sub:</b> {ipo['retail_x']:.2f}x")
-        lines.append(f"• <i>Closing: {ipo['close_str']} ({days_str})</i>")
         lines.append("──────────────────────")
 
     return "\n".join(lines)
@@ -557,17 +555,17 @@ def main():
         all_ipos = get_all_ipos()
         print(f"Total IPO records fetched: {len(all_ipos)}")
 
-        # Filter strictly for currently open IPOs with GMP >= 20%
+        # Filter strictly for IPOs CLOSING TODAY (Last Date) with GMP >= 20%
         qualifying_ipos = [
             ipo for ipo in all_ipos
-            if ipo["is_open"] and ipo["gmp_pct"] >= gmp_min
+            if ipo["is_closing_today"] and ipo["gmp_pct"] >= gmp_min
         ]
 
-        print(f"IPOs satisfying GMP >= {gmp_min}%: {len(qualifying_ipos)}")
+        print(f"IPOs closing today with GMP >= {gmp_min}%: {len(qualifying_ipos)}")
 
-        # If threshold is NOT satisfied by any IPO, do not send any message
+        # If no IPO closes today with GMP >= 20%, do not send any message
         if not qualifying_ipos:
-            print(f"[INFO] No open IPOs met the {gmp_min}% GMP threshold. Skipping Telegram notification.")
+            print(f"[INFO] No IPO closing today meets the {gmp_min}% GMP threshold. Skipping Telegram notification.")
             return
 
         message = build_gmp_alert_message(qualifying_ipos, gmp_min=gmp_min)
