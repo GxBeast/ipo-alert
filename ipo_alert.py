@@ -572,7 +572,7 @@ def build_gmp_alert_message(qualifying_ipos: List[Dict], gmp_min: float = 20.0) 
         cat_label = "mainboard" if ipo["category"] == "Mainboard" else "sme"
 
         lines.append(f"<b>{ipo['name']} ({cat_label})</b>")
-        lines.append(f"• <b>GMP:</b> ₹{ipo['gmp_rs']:.0f} (<b>{ipo['gmp_pct']:+.1f}%</b>)")
+        lines.append(f"• <b>GMP:</b> ₹{format_indian_number(ipo['gmp_rs'])} (<b>{ipo['gmp_pct']:+.1f}%</b>)")
         lines.append(f"• <b>QIB Sub:</b> {ipo['qib_x']:.2f}x")
         lines.append(f"• <b>HNI Sub:</b> {ipo['hni_x']:.2f}x")
         lines.append(f"• <b>Retail Sub:</b> {ipo['retail_x']:.2f}x")
