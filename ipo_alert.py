@@ -23,6 +23,7 @@ Environment Variables:
 import os
 import sys
 import re
+import math
 import time
 import traceback
 import argparse
@@ -79,6 +80,28 @@ def parse_price(price_text: str) -> float:
         except ValueError:
             pass
     return 0.0
+
+
+def calc_bhni(price: float, lot_str: str) -> Tuple[int, int, float]:
+    """
+    Calculates the minimum bHNI application (> ₹10,00,000 as per SEBI regulations).
+    Returns (lots, shares, value).
+    """
+    clean_lot = re.sub(r'[^0-9]', '', str(lot_str))
+    if not clean_lot or price <= 0:
+        return 0, 0, 0.0
+
+    lot_size = int(clean_lot)
+    lot_value = lot_size * price
+    if lot_value <= 0:
+        return 0, 0, 0.0
+
+    # Minimum bHNI application is strictly greater than ₹10,00,000
+    bhni_lots = math.ceil(1000001 / lot_value)
+    bhni_shares = bhni_lots * lot_size
+    bhni_value = bhni_shares * price
+
+    return bhni_lots, bhni_shares, bhni_value
 
 
 def parse_gmp(gmp_text: str, price_val: float) -> Tuple[float, float]:
@@ -480,6 +503,10 @@ def get_all_ipos() -> List[Dict]:
         hni_val = sub_info["hni"] if sub_info else 0.0
         retail_val = sub_info["retail"] if sub_info else 0.0
 
+        # Lot size & bHNI calculation
+        lot_text = r.get("LOT", "0")
+        bhni_lots, bhni_shares, bhni_value = calc_bhni(price_val, lot_text)
+
         ipos.append({
             "name": clean_name,
             "category": category,
@@ -495,7 +522,10 @@ def get_all_ipos() -> List[Dict]:
             "days_left": days_left,
             "qib_x": qib_val,
             "hni_x": hni_val,
-            "retail_x": retail_val
+            "retail_x": retail_val,
+            "bhni_lots": bhni_lots,
+            "bhni_shares": bhni_shares,
+            "bhni_value": bhni_value
         })
 
     return ipos
@@ -513,6 +543,7 @@ def build_gmp_alert_message(qualifying_ipos: List[Dict], gmp_min: float = 20.0) 
       qib sub
       hni sub
       retail sub
+      bHNI application (shares, lot, value)
     """
     now_ist = get_ist_now().strftime("%d-%b-%Y, %I:%M %p IST")
     lines = [
@@ -529,6 +560,8 @@ def build_gmp_alert_message(qualifying_ipos: List[Dict], gmp_min: float = 20.0) 
         lines.append(f"• <b>QIB Sub:</b> {ipo['qib_x']:.2f}x")
         lines.append(f"• <b>HNI Sub:</b> {ipo['hni_x']:.2f}x")
         lines.append(f"• <b>Retail Sub:</b> {ipo['retail_x']:.2f}x")
+        if ipo["bhni_lots"] > 0:
+            lines.append(f"• <b>bHNI App:</b> {ipo['bhni_lots']} lots ({ipo['bhni_shares']:,} shares) | ₹{ipo['bhni_value']:,.0f}")
         lines.append("──────────────────────")
 
     return "\n".join(lines)
