@@ -4,8 +4,8 @@ IPO Alert Bot for Indian Stock Markets.
 Scrapes live GMP and Subscription data from investorgain.com and sends Telegram alerts.
 
 Alert Rules:
-  - Scans daily at 2:00 PM IST.
-  - Filters strictly for open IPOs with GMP >= 20%.
+  - Scans daily at 11:00 AM IST and 2:00 PM IST.
+  - Filters strictly for open IPOs with GMP >= 15%.
   - Sends Telegram alerts ONLY if at least one IPO meets the threshold.
   - Formats:
       IPO Name (Mainboard / SME)
@@ -13,11 +13,12 @@ Alert Rules:
       QIB Sub
       HNI Sub
       Retail Sub
+      bHNI application details (lots, shares, value)
 
 Environment Variables:
   - TG_TOKEN: Telegram bot token (required)
   - TG_CHAT_ID: Telegram chat ID (required)
-  - GMP_MIN_PCT: Minimum GMP percentage required to alert (default: 20)
+  - GMP_MIN_PCT: Minimum GMP percentage required to alert (default: 15)
 """
 
 import os
@@ -551,7 +552,7 @@ def get_all_ipos() -> List[Dict]:
 # 6. MESSAGE FORMATTING (CUSTOM LAYOUT)
 # ==========================================
 
-def build_gmp_alert_message(qualifying_ipos: List[Dict], gmp_min: float = 20.0) -> str:
+def build_gmp_alert_message(qualifying_ipos: List[Dict], gmp_min: float = 15.0) -> str:
     """
     Formats the message strictly according to requested format:
       ipo name(mainbord/sme)
@@ -592,7 +593,7 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="Print message to console instead of sending to Telegram")
     args = parser.parse_args()
 
-    gmp_min = float(os.environ.get("GMP_MIN_PCT", "20"))
+    gmp_min = float(os.environ.get("GMP_MIN_PCT", "15"))
 
     print("==================================================")
     print("IPO Alert Bot Started")
@@ -604,7 +605,7 @@ def main():
         all_ipos = get_all_ipos()
         print(f"Total IPO records fetched: {len(all_ipos)}")
 
-        # Filter strictly for IPOs CLOSING TODAY (Last Date) with GMP >= 20%
+        # Filter strictly for IPOs CLOSING TODAY (Last Date) with GMP >= 15%
         qualifying_ipos = [
             ipo for ipo in all_ipos
             if ipo["is_closing_today"] and ipo["gmp_pct"] >= gmp_min
@@ -612,7 +613,7 @@ def main():
 
         print(f"IPOs closing today with GMP >= {gmp_min}%: {len(qualifying_ipos)}")
 
-        # If no IPO closes today with GMP >= 20%, do not send any message
+        # If no IPO closes today with GMP >= 15%, do not send any message
         if not qualifying_ipos:
             print(f"[INFO] No IPO closing today meets the {gmp_min}% GMP threshold. Skipping Telegram notification.")
             return
