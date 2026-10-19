@@ -2,8 +2,8 @@ name: IPO Alert Bot
 
 on:
   schedule:
-    # 2:00 PM IST everyday (08:30 UTC)
-    - cron: '30 8 * * *'
+    # 11:00 AM IST (05:30 UTC) and 2:00 PM IST (08:30 UTC) everyday
+    - cron: '30 5,8 * * *'
   workflow_dispatch:
 
 jobs:
@@ -32,7 +32,7 @@ jobs:
         env:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-          GMP_MIN_PCT: ${{ vars.GMP_MIN_PCT || 20 }}
+          GMP_MIN_PCT: ${{ vars.GMP_MIN_PCT || 15 }}
         run: |
           python ipo_alert.py
 
